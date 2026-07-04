@@ -20,7 +20,13 @@ export function SelectorVariante({
   variantes: VariantePieza[];
   precioDesde: number;
 }) {
-  const [sel, setSel] = useState<Record<string, string>>({});
+  // Auto-selecciona los ejes que tienen UNA sola opción (evita el "click muerto":
+  // p.ej. un tapete con un único color ya abre resuelto, con precio y stepper).
+  const [sel, setSel] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      ejes.filter((e) => e.opciones.length === 1).map((e) => [e.codigo, e.opciones[0].valor]),
+    ),
+  );
   const [qty, setQty] = useState(1);
 
   const completo = ejes.every((e) => sel[e.codigo]);
@@ -29,6 +35,7 @@ export function SelectorVariante({
     : undefined;
   const disponible = variante?.disponible ?? 0;
   const agotado = completo && (!variante || disponible <= 0);
+  const faltan = ejes.filter((e) => !sel[e.codigo]).map((e) => e.nombre.toLowerCase());
 
   // ¿Hay alguna variante CON STOCK que use (codigo=valor) y respete lo ya elegido en otros ejes?
   const alcanzable = (codigo: string, valor: string) =>
@@ -47,7 +54,7 @@ export function SelectorVariante({
   return (
     <div className="mt-6 space-y-5">
       {/* Precio reactivo: "desde X" → exacto al resolver la variante. */}
-      <p className="font-display text-3xl tabular-nums text-grana transition-opacity duration-200">
+      <p aria-live="polite" className="font-display text-3xl tabular-nums text-grana transition-opacity duration-200">
         {variante ? (
           formatMXN(variante.precio)
         ) : (
@@ -76,7 +83,9 @@ export function SelectorVariante({
                 const ok = alcanzable(e.codigo, o.valor);
                 const bloqueado = !ok && !activo;
 
-                if (esColor && o.hex) {
+                if (esColor) {
+                  // Swatch como PILL: punto de color + nombre (legible en touch, mismo estado
+                  // activo/agotado que las tallas). Multicolor (sin hex) usa un punto degradado.
                   return (
                     <button
                       key={o.valor}
@@ -84,12 +93,23 @@ export function SelectorVariante({
                       onClick={() => setEje(e.codigo, o.valor)}
                       disabled={bloqueado}
                       aria-pressed={activo}
-                      title={ok ? o.etiqueta : `${o.etiqueta} — agotado`}
-                      className={`h-9 w-9 rounded-full border border-black/10 transition ${
-                        activo ? "ring-2 ring-grana ring-offset-2 ring-offset-cal" : ""
-                      } ${bloqueado ? "opacity-25" : "hover:ring-1 hover:ring-grana/40 hover:ring-offset-1 hover:ring-offset-cal"}`}
-                      style={{ background: o.hex }}
-                    />
+                      className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm transition-colors ${
+                        activo
+                          ? "border-grana bg-grana/10 text-grana"
+                          : bloqueado
+                            ? "border-linea text-ceniza/50 line-through"
+                            : "border-linea text-tinta hover:border-ceniza/50 hover:bg-arena/50"
+                      }`}
+                    >
+                      <span
+                        className={`h-4 w-4 shrink-0 rounded-full border border-black/10 ${bloqueado ? "opacity-40" : ""}`}
+                        style={{
+                          background: o.hex ?? "conic-gradient(#a32929,#d9a441,#3f6b47,#2a4d7a,#a32929)",
+                        }}
+                        aria-hidden
+                      />
+                      {o.etiqueta}
+                    </button>
                   );
                 }
                 return (
@@ -116,19 +136,21 @@ export function SelectorVariante({
         );
       })}
 
-      {completo ? (
-        <p className={`text-sm ${!agotado && disponible <= 3 ? "text-grana" : "text-ceniza"}`}>
-          {disponible > 0
-            ? disponible <= 3
-              ? `Solo quedan ${disponible}.`
-              : `${disponible} disponibles.`
-            : "Agotado en esta combinación — prueba otra."}
-        </p>
-      ) : (
-        <p className="text-sm text-ceniza">
-          Elige {ejes.map((e) => e.nombre.toLowerCase()).join(" y ")} para agregar al carrito.
-        </p>
-      )}
+      <div className="min-h-5" aria-live="polite">
+        {completo ? (
+          <p className={`text-sm ${!agotado && disponible <= 3 ? "text-grana" : "text-ceniza"}`}>
+            {disponible > 0
+              ? disponible <= 3
+                ? `Solo quedan ${disponible}.`
+                : `${disponible} disponibles.`
+              : "Agotado en esta combinación — prueba otra."}
+          </p>
+        ) : (
+          <p className="text-sm text-ceniza">
+            Elige {faltan.join(" y ")} para agregar al carrito.
+          </p>
+        )}
+      </div>
 
       {variante && !agotado ? (
         <SelectorCantidad value={qty} onChange={setQty} max={disponible} />
@@ -143,7 +165,13 @@ export function SelectorVariante({
         }
         qty={qty}
         disabled={!variante || agotado}
-        disabledLabel={!completo ? "Elige tus opciones" : agotado ? "Agotado" : undefined}
+        disabledLabel={
+          faltan.length
+            ? `Elige ${faltan.join(" y ")}`
+            : agotado
+              ? "Agotado"
+              : undefined
+        }
       />
     </div>
   );

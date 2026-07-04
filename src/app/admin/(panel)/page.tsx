@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   TrendingUp,
   TrendingDown,
+  Minus,
   ShoppingBag,
   Wallet,
   Receipt,
@@ -13,7 +14,8 @@ import {
 import { requireAdmin } from "@/lib/admin/auth";
 import { listarProductos } from "@/lib/admin/productos";
 import { listarArtesanos } from "@/lib/admin/artesanos";
-import { computeMetrics, fmtPesos, COMISION_RATE, type Orden } from "@/lib/admin/metrics";
+import { fmtPesos, COMISION_RATE, type Orden } from "@/lib/admin/metrics";
+import { getMetricsReales } from "@/lib/admin/metrics-reales";
 import { StatCard } from "@/components/admin/stat-card";
 import { Donut, HBars, StackedBar } from "@/components/admin/charts";
 import { SalesChart } from "@/components/admin/sales-chart";
@@ -31,21 +33,25 @@ export default async function DashboardPage() {
     listarProductos(),
     listarArtesanos(),
   ]);
-  const m = computeMetrics(productos, artesanos, new Date());
+  const m = await getMetricsReales(productos, artesanos, new Date());
 
   const ingreso = [
     { label: "Neto a artesanos", value: m.netoMes, color: "#57211d" },
     { label: "Comisión plataforma", value: m.comisionMes, color: "#b45f39" },
-    { label: "Retención SAT", value: m.retencionMes, color: "#8c7c68" },
   ];
 
-  const up = m.deltaPct >= 0;
-  const delta = (
-    <span className={`inline-flex items-center gap-1 ${up ? "text-[#3f7a4f]" : "text-destructive"}`}>
-      {up ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-      {Math.abs(m.deltaPct)}%
-    </span>
-  );
+  // Tendencia HONESTA: %↑/↓ solo si hay mes previo con qué comparar; si no, un texto claro.
+  const delta =
+    m.deltaDir === "up" || m.deltaDir === "down" ? (
+      <span className={`inline-flex items-center gap-1 ${m.deltaDir === "up" ? "text-[#3f7a4f]" : "text-destructive"}`}>
+        {m.deltaDir === "up" ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
+        {Math.abs(m.deltaPct)}% <span className="text-muted-foreground">vs. mes previo</span>
+      </span>
+    ) : (
+      <span className="inline-flex items-center gap-1 text-muted-foreground">
+        <Minus className="h-3.5 w-3.5" /> {m.deltaTexto}
+      </span>
+    );
 
   return (
     <div className="space-y-6">
@@ -62,8 +68,8 @@ export default async function DashboardPage() {
           </p>
         </div>
         <span className="inline-flex items-center gap-2 rounded-full border border-tinto/15 bg-card px-3 py-1 text-xs text-muted-foreground">
-          <span className="h-1.5 w-1.5 rounded-full bg-barro" />
-          Ventas simuladas · demo
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          Datos en vivo
         </span>
       </header>
 
@@ -140,7 +146,7 @@ export default async function DashboardPage() {
             <h2 className="font-grotesk text-base font-semibold text-foreground">
               Órdenes recientes
             </h2>
-            <span className="text-xs text-muted-foreground">simuladas</span>
+            <span className="text-xs text-muted-foreground">en vivo</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

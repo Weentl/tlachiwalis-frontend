@@ -50,7 +50,8 @@ export default async function PiezaPage({ params }: { params: Promise<{ id: stri
     ["Taller", product.maker],
   ];
   const filas: [string, string][] = [
-    ...baseSpecs.filter(([, v]) => Boolean(v && v.trim())),
+    // Filtra pseudo-valores tipo "Ver guía de tallas" (parecen link roto en la ficha).
+    ...baseSpecs.filter(([, v]) => Boolean(v && v.trim()) && !/^ver /i.test(v)),
     ...extra.atributos.map((a) => [a.nombre, a.valor] as [string, string]),
   ];
 
@@ -109,10 +110,6 @@ export default async function PiezaPage({ params }: { params: Promise<{ id: stri
               </p>
             ) : null}
 
-            <p className="mt-6 max-w-[62ch] leading-relaxed text-tinta/85">
-              {product.descripcion}
-            </p>
-
             {/* Zona de compra por tipo */}
             {esVariantes ? (
               <SelectorVariante
@@ -122,7 +119,12 @@ export default async function PiezaPage({ params }: { params: Promise<{ id: stri
                 precioDesde={precioDesde}
               />
             ) : (
-              <ComprarSimple product={product} tipo={extra.tipo} disponible={disponibleSimple} />
+              <ComprarSimple
+                product={product}
+                tipo={extra.tipo}
+                disponible={disponibleSimple}
+                varianteId={varDefault?.id}
+              />
             )}
 
             <p className="mt-4 flex items-center gap-2 text-sm text-ceniza">
@@ -136,6 +138,11 @@ export default async function PiezaPage({ params }: { params: Promise<{ id: stri
               <span>Pago seguro</span>
               <span>Envío a todo México</span>
             </div>
+
+            {/* Descripción (narrativa, después de la decisión de compra) */}
+            <p className="mt-6 max-w-[62ch] leading-relaxed text-tinta/85">
+              {product.descripcion}
+            </p>
 
             {/* Pasaporte de la pieza */}
             <PasaportePieza filas={filas} />

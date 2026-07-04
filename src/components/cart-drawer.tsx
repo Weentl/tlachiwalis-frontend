@@ -173,7 +173,7 @@ export function CartDrawer() {
                 El envío se calcula al pagar.
               </p>
               <Link
-                href="/carrito"
+                href="/checkout"
                 onClick={closeCart}
                 className={cn(botonCls({ variant: "primary", size: "lg", pill: true }), "mt-4 w-full")}
               >

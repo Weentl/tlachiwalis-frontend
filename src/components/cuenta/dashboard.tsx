@@ -5,9 +5,11 @@ import { PerfilForm } from "./perfil-form";
 import { Direcciones } from "./direcciones";
 import { PrivacidadPanel } from "./privacidad-panel";
 import { MetodosPago } from "./metodos-pago";
+import { PedidosLista } from "./pedidos-lista";
 import { botonCls } from "@/components/ui/boton";
 import { cn } from "@/lib/utils";
 import type { PerfilComprador, Direccion } from "@/lib/comprador/perfil";
+import type { Pedido } from "@/lib/comprador/pedidos";
 
 type SecId = "perfil" | "pedidos" | "direcciones" | "pagos" | "privacidad";
 const SECCIONES: { id: SecId; label: string; kicker: string; sub: string }[] = [
@@ -24,12 +26,14 @@ export function CuentaDashboard({
   emailVerificado,
   miembroDesde,
   direcciones,
+  pedidos,
 }: {
   perfil: PerfilComprador;
   email: string;
   emailVerificado: boolean;
   miembroDesde: string | null;
   direcciones: Direccion[];
+  pedidos: Pedido[];
 }) {
   const [sec, setSec] = useState<SecId>("perfil");
   const actual = SECCIONES.find((s) => s.id === sec)!;
@@ -71,25 +75,29 @@ export function CuentaDashboard({
         ) : null}
 
         {sec === "pedidos" ? (
-          <div className="max-w-xl rounded-[16px] border border-dashed border-linea bg-lino/60 p-8 text-center">
-            <p className="text-tinta">Aún no hay pedidos por aquí.</p>
-            <p className="mx-auto mt-1.5 max-w-sm text-sm text-ceniza">
-              Cuando compres tu primera pieza, verás su camino desde el taller hasta tu puerta.
-            </p>
-            <Link href="/tienda" className={cn(botonCls({ size: "lg", pill: true }), "mt-5")}>
-              Explorar la tienda
-            </Link>
-            {perfil.intereses.length > 0 ? (
-              <p className="mt-4">
-                <Link
-                  href={`/tienda?oficio=${encodeURIComponent(perfil.intereses[0])}`}
-                  className="text-sm text-grana underline decoration-grana/40 underline-offset-4 hover:decoration-grana"
-                >
-                  Ver piezas de {perfil.intereses.slice(0, 2).join(" y ")} →
-                </Link>
+          pedidos.length > 0 ? (
+            <PedidosLista pedidos={pedidos} />
+          ) : (
+            <div className="max-w-xl rounded-[16px] border border-dashed border-linea bg-lino/60 p-8 text-center">
+              <p className="text-tinta">Aún no hay pedidos por aquí.</p>
+              <p className="mx-auto mt-1.5 max-w-sm text-sm text-ceniza">
+                Cuando compres tu primera pieza, verás su camino desde el taller hasta tu puerta.
               </p>
-            ) : null}
-          </div>
+              <Link href="/tienda" className={cn(botonCls({ size: "lg", pill: true }), "mt-5")}>
+                Explorar la tienda
+              </Link>
+              {perfil.intereses.length > 0 ? (
+                <p className="mt-4">
+                  <Link
+                    href={`/tienda?oficio=${encodeURIComponent(perfil.intereses[0])}`}
+                    className="text-sm text-grana underline decoration-grana/40 underline-offset-4 hover:decoration-grana"
+                  >
+                    Ver piezas de {perfil.intereses.slice(0, 2).join(" y ")} →
+                  </Link>
+                </p>
+              ) : null}
+            </div>
+          )
         ) : null}
 
         {sec === "direcciones" ? <Direcciones direcciones={direcciones} /> : null}

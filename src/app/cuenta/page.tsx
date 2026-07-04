@@ -5,13 +5,18 @@ import { CuentaDashboard } from "@/components/cuenta/dashboard";
 import { AvatarIniciales } from "@/components/cuenta/avatar-iniciales";
 import { requireComprador } from "@/lib/comprador/auth";
 import { getPerfil, getDirecciones } from "@/lib/comprador/perfil";
+import { getPedidos } from "@/lib/comprador/pedidos";
 import { cerrarSesionComprador } from "@/app/entrar/actions";
 
 export const metadata: Metadata = { title: "Mi cuenta · Tlachiwalis" };
 
 export default async function CuentaPage() {
   const { user } = await requireComprador();
-  const [perfil, direcciones] = await Promise.all([getPerfil(), getDirecciones()]);
+  const [perfil, direcciones, pedidos] = await Promise.all([
+    getPerfil(),
+    getDirecciones(),
+    getPedidos(),
+  ]);
 
   const emailVerificado = Boolean((user as { email_confirmed_at?: string }).email_confirmed_at);
   const miembroDesde = user.created_at
@@ -48,6 +53,7 @@ export default async function CuentaPage() {
           emailVerificado={emailVerificado}
           miembroDesde={miembroDesde}
           direcciones={direcciones}
+          pedidos={pedidos}
         />
       </main>
       <SiteFooter />

@@ -6,11 +6,12 @@ import {
   CheckCircle2,
   FileEdit,
   AlertTriangle,
-  ArrowUpRight,
+  Wallet,
 } from "lucide-react";
 import { requireVendedor } from "@/lib/vendedor/auth";
 import { listarMisProductos } from "@/lib/vendedor/productos";
 import { getMiArtesano } from "@/lib/vendedor/perfil";
+import { getVentasVendedor } from "@/lib/vendedor/ventas";
 import { fmtPesos } from "@/lib/admin/metrics";
 import { StatCard } from "@/components/admin/stat-card";
 import type { ProductoStatus } from "@/lib/admin/types";
@@ -25,17 +26,15 @@ const dot: Record<ProductoStatus, string> = {
 // simuladas; los pagos/ventas llegan en fase 6 con Stripe Connect).
 export default async function VendedorInicio() {
   await requireVendedor();
-  const [productos, artesano] = await Promise.all([
+  const [productos, artesano, ventas] = await Promise.all([
     listarMisProductos(),
     getMiArtesano(),
+    getVentasVendedor(),
   ]);
 
   const publicadas = productos.filter((p) => p.status === "publicado").length;
   const borradores = productos.filter((p) => p.status === "borrador").length;
   const agotadas = productos.filter((p) => p.status === "agotado").length;
-  const valorCatalogo = productos
-    .filter((p) => p.status === "publicado")
-    .reduce((s, p) => s + p.precio_centavos, 0);
 
   const recientes = [...productos]
     .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
@@ -67,7 +66,17 @@ export default async function VendedorInicio() {
         <StatCard label="Piezas en total" value={productos.length.toLocaleString("es-MX")} icon={<Package className="h-4 w-4" />} color="#57211d" />
         <StatCard label="Publicadas" value={publicadas.toLocaleString("es-MX")} icon={<CheckCircle2 className="h-4 w-4" />} color="#3f7a4f" />
         <StatCard label="Borradores" value={borradores.toLocaleString("es-MX")} icon={<FileEdit className="h-4 w-4" />} color="#8c7c68" />
-        <StatCard label="Valor publicado" value={fmtPesos(valorCatalogo)} icon={<ArrowUpRight className="h-4 w-4" />} color="#a8761f" />
+        <StatCard
+          label="Vendido este mes"
+          value={fmtPesos(ventas.netoMesCentavos)}
+          sub={
+            <span className="text-muted-foreground">
+              {ventas.numVentasMes} {ventas.numVentasMes === 1 ? "venta" : "ventas"}
+            </span>
+          }
+          icon={<Wallet className="h-4 w-4" />}
+          color="#3f7a4f"
+        />
       </div>
 
       {agotadas > 0 ? (

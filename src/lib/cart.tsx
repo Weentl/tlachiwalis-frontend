@@ -25,6 +25,7 @@ type CartCtx = {
   add: (p: Product, variante?: CartVariante, qty?: number) => void;
   remove: (key: string) => void;
   setQty: (key: string, qty: number) => void;
+  clear: () => void;
   count: number;
   total: number;
   /* Estado del cart drawer (slide-over). El header y el add-to-cart lo abren. */
@@ -88,6 +89,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const remove = (key: string) =>
     setItems((prev) => prev.filter((i) => i.key !== key));
 
+  const clear = () => setItems([]);
+
   // Fija cantidad exacta (stepper del drawer). ≤0 quita la línea.
   const setQty = (key: string, qty: number) =>
     setItems((prev) => {
@@ -107,6 +110,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         add,
         remove,
         setQty,
+        clear,
         count,
         total,
         open,

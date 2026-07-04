@@ -4,7 +4,7 @@ import type { ProductoAdmin, ArtesanoAdmin } from "@/lib/admin/types";
 // La plataforma cobra comisión sobre la venta y, como RETENEDOR ante el SAT,
 // retiene ISR+IVA sobre la parte del artesano (con RFC ~10.5%, sin RFC ~36%),
 // luego dispersa el neto. (Tasas placeholder hasta validar con contador.)
-export const COMISION_RATE = 0.12;
+export const COMISION_RATE = 0.1; // 10% — coincide con COMISION_BPS del backend (apps/api)
 const tasaRetencion = (rfc: string | null) => (rfc ? 0.105 : 0.36);
 
 // Hash estable de string → 0..1 (para simular ventas SIN aleatoriedad por render).

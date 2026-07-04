@@ -89,14 +89,14 @@ export function CartView() {
               <span className="ml-1 align-middle font-sans text-sm text-ceniza">MXN</span>
             </span>
           </div>
-          <p className="mt-2 text-sm text-ceniza">El envío se calcula al pagar.</p>
-          <button
-            type="button"
+          <p className="mt-2 text-sm text-ceniza">El envío se coordina tras la compra.</p>
+          <Link
+            href="/checkout"
             className={cn(botonCls({ variant: "primary", size: "lg", pill: true }), "mt-6 w-full")}
           >
             Proceder al pago
-          </button>
-          <p className="mt-3 text-center text-xs text-ceniza">Pago seguro · próximamente</p>
+          </Link>
+          <p className="mt-3 text-center text-xs text-ceniza">Pago seguro con Stripe</p>
         </div>
       </aside>
     </div>
