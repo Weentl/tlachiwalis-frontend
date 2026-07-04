@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -13,7 +13,9 @@ import {
   iniciarCheckout,
   confirmarOrden,
   agregarDireccionCheckout,
+  cotizarEnvio,
   type FacturacionCheckout,
+  type Cotizacion,
 } from "@/app/checkout/actions";
 import { guardarFacturacion } from "@/app/cuenta/facturacion-actions";
 import { REGIMENES_FISCALES, USOS_CFDI } from "@/lib/comprador/facturacion-catalogos";
@@ -183,6 +185,35 @@ function Inner({
   const [quiereFactura, setQuiereFactura] = useState(false);
   const [fac, setFac] = useState<PerfilFacturacion>(factura);
   const [guardarFactura, setGuardarFactura] = useState(true);
+
+  // Envío: se cotiza (para mostrar) cada vez que cambia la dirección elegida. El cobro real lo
+  // recalcula el backend desde el CP de la dirección, así que esto es solo un estimado.
+  const [envio, setEnvio] = useState<Cotizacion | null>(null);
+  const [cotizando, setCotizando] = useState(false);
+
+  useEffect(() => {
+    if (!dirId || count === 0) {
+      setEnvio(null);
+      return;
+    }
+    let cancelado = false;
+    setCotizando(true);
+    const payload = items
+      .filter((i) => i.variante?.id)
+      .map((i) => ({ productoId: i.product.id, varianteId: i.variante!.id, cantidad: i.qty }));
+    cotizarEnvio(dirId, payload, Math.round(total * 100)).then((c) => {
+      if (cancelado) return;
+      setEnvio(c);
+      setCotizando(false);
+    });
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dirId]);
+
+  const envioPesos = envio ? envio.costoCentavos / 100 : 0;
+  const totalConEnvio = total + envioPesos;
 
   if (count === 0) {
     return (
@@ -546,7 +577,7 @@ function Inner({
             ) : null}
 
             <Boton type="button" size="lg" pill disabled={!stripe || pending} className="mt-5 w-full" onClick={pagar}>
-              {pending ? "Procesando…" : `Pagar ${formatMXN(total)} MXN`}
+              {pending ? "Procesando…" : `Pagar ${formatMXN(totalConEnvio)} MXN`}
             </Boton>
             <p className="mt-3 flex items-center justify-center gap-2 font-mono text-[0.62rem] uppercase tracking-[0.12em] text-ceniza">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="text-anil" aria-hidden>
@@ -588,17 +619,27 @@ function Inner({
               <span className="tabular-nums">{formatMXN(total)}</span>
             </div>
             <div className="flex items-center justify-between text-ceniza">
-              <span>Envío</span>
-              <span>Se coordina tras la compra</span>
+              <span>Envío{envio?.zona === "extendida" ? " · zona extendida" : ""}</span>
+              <span className="tabular-nums">
+                {!dirId ? "Elige dirección" : cotizando ? "Calculando…" : envio ? (envio.gratis ? "Gratis" : formatMXN(envioPesos)) : "—"}
+              </span>
             </div>
+            {envio && dirId && !cotizando ? (
+              <p className="text-xs text-ceniza/80">Entrega estimada {envio.diasMin}–{envio.diasMax} días hábiles.</p>
+            ) : null}
           </div>
           <div className="mt-3 flex items-baseline justify-between border-t border-linea pt-3">
             <span className="font-mono text-[0.66rem] uppercase tracking-[0.16em] text-ceniza">Total</span>
             <span className="font-display text-2xl tabular-nums text-tinta">
-              {formatMXN(total)}
+              {formatMXN(totalConEnvio)}
               <span className="ml-1 align-middle font-sans text-sm text-ceniza">MXN</span>
             </span>
           </div>
+          {envio?.requiereCoordinacion && envio.nota ? (
+            <p className="mt-3 rounded-[12px] border border-cempa/40 bg-cempa/[0.08] px-3 py-2.5 text-xs text-tinta">
+              {envio.nota}
+            </p>
+          ) : null}
           <p className="mt-2 text-xs text-ceniza">Le compras directo a los talleres.</p>
         </div>
       </aside>

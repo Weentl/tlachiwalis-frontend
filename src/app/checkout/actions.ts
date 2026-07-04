@@ -139,6 +139,44 @@ export async function agregarDireccionCheckout(
   };
 }
 
+export type Cotizacion = {
+  zona: "nacional" | "extendida";
+  nombre: string;
+  costoCentavos: number;
+  diasMin: number;
+  diasMax: number;
+  requiereCoordinacion: boolean;
+  nota: string | null;
+  gratis: boolean;
+};
+
+// Cotiza el envío para MOSTRARLO (zona por CP de la dirección elegida + peso). El cobro real lo
+// recalcula el backend en /payments/checkout con la misma lógica, así que es solo un estimado seguro.
+export async function cotizarEnvio(
+  direccionId: string,
+  items: ItemCheckout[],
+  subtotalCentavos: number,
+): Promise<Cotizacion | null> {
+  const tb = await tokenBase();
+  if (!tb) return null;
+  try {
+    const res = await fetch(`${tb.base}/shipping/quote`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${tb.token}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        direccionId,
+        items: items.map((i) => ({ productoId: i.productoId, cantidad: i.cantidad })),
+        subtotalCentavos,
+      }),
+      cache: "no-store",
+    });
+    const data = (await res.json().catch(() => null)) as { ok?: boolean; cotizacion?: Cotizacion } | null;
+    return data?.ok && data.cotizacion ? data.cotizacion : null;
+  } catch {
+    return null;
+  }
+}
+
 // Finaliza la orden tras confirmar el pago (respaldo del webhook; idempotente).
 export async function confirmarOrden(paymentIntentId: string): Promise<boolean> {
   const tb = await tokenBase();
