@@ -33,6 +33,11 @@ function Inner() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Clave de idempotencia estable por sesión de checkout: un doble submit o un reintento tras un
+  // rechazo reusan la MISMA orden/PaymentIntent (no crea órdenes basura).
+  const [idemKey] = useState(() =>
+    typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `ck_${Date.now()}`,
+  );
 
   if (count === 0) {
     return (
@@ -61,7 +66,7 @@ function Inner() {
       return;
     }
 
-    const ini = await iniciarCheckout(payload);
+    const ini = await iniciarCheckout(payload, idemKey);
     if (!ini.ok) {
       setError(ini.error);
       setPending(false);

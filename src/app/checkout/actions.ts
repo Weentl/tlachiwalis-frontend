@@ -1,5 +1,6 @@
 "use server";
 import { requireComprador } from "@/lib/comprador/auth";
+import { clienteIp, estaBloqueado, registrarFallo } from "@/lib/admin/rate-limit";
 
 function apiBase(): string | null {
   return (
@@ -26,24 +27,31 @@ export type ItemCheckout = { productoId: string; varianteId: string; cantidad: n
 // client_secret para confirmar el pago en el cliente. El front NUNCA fija montos.
 export async function iniciarCheckout(
   items: ItemCheckout[],
+  idempotencyKey?: string,
 ): Promise<{ ok: true; clientSecret: string; orderId: string; total: number } | { ok: false; error: string }> {
+  const ip = await clienteIp();
+  if (estaBloqueado("checkout:" + ip)) {
+    return { ok: false, error: "Demasiados intentos de pago. Espera un momento e inténtalo de nuevo." };
+  }
   const tb = await tokenBase();
   if (!tb) return { ok: false, error: "No disponible en este entorno." };
   try {
     const res = await fetch(`${tb.base}/payments/checkout`, {
       method: "POST",
       headers: { authorization: `Bearer ${tb.token}`, "content-type": "application/json" },
-      body: JSON.stringify({ items }),
+      body: JSON.stringify({ items, idempotencyKey }),
       cache: "no-store",
     });
     const data = (await res.json().catch(() => null)) as
       | { ok?: boolean; clientSecret?: string; orderId?: string; total?: number; error?: string }
       | null;
     if (!res.ok || !data?.ok || !data.clientSecret || !data.orderId) {
+      registrarFallo("checkout:" + ip);
       return { ok: false, error: data?.error ?? "No se pudo iniciar el pago." };
     }
     return { ok: true, clientSecret: data.clientSecret, orderId: data.orderId, total: data.total ?? 0 };
   } catch {
+    registrarFallo("checkout:" + ip);
     return { ok: false, error: "No se pudo conectar con el pago." };
   }
 }

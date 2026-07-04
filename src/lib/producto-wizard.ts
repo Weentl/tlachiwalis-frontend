@@ -95,10 +95,12 @@ async function cobrosListos(ctx: WizardCtx): Promise<boolean> {
   if (ctx.rol !== "vendedor" || !ctx.artesanoId) return true;
   const { data } = await ctx.supabase
     .from("artesanos")
-    .select("cobros_habilitados")
+    .select("cobros_habilitados,stripe_account_id")
     .eq("id", ctx.artesanoId)
     .maybeSingle();
-  return Boolean((data as { cobros_habilitados?: boolean } | null)?.cobros_habilitados);
+  const a = data as { cobros_habilitados?: boolean; stripe_account_id?: string | null } | null;
+  // Defensa en profundidad (además del trigger BD): cobros habilitados EXIGE cuenta Stripe real.
+  return Boolean(a?.cobros_habilitados && a?.stripe_account_id);
 }
 
 // ── Autoridad de PRECIO y de SKU (nunca del cliente) ──────────────────────────

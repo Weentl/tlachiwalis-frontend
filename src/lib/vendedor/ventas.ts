@@ -53,7 +53,8 @@ export async function getVentasVendedor(now = new Date()): Promise<ResumenVentas
     comisionTotalCentavos += v.comisionCentavos;
     netoTotalCentavos += v.netoCentavos;
     if (v.status === "transferido") netoTransferidoCentavos += v.netoCentavos;
-    else netoPendienteCentavos += v.netoCentavos;
+    else if (v.status === "pendiente" || v.status === "retenido") netoPendienteCentavos += v.netoCentavos;
+    // sin_cuenta / fallido NO cuentan como "por depositar" (no hay ruta de depósito).
     if (v.fecha && mesKey(new Date(v.fecha)) === curKey) {
       netoMesCentavos += v.netoCentavos;
       numVentasMes++;

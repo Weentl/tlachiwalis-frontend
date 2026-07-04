@@ -214,7 +214,11 @@ export default async function ArtesanosPage({
                               ? "Suspendido"
                               : "Pendiente"}
                         </span>
-                        {a.user_id ? (
+                        {a.es_demo ? (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800">
+                            Demo · exhibición
+                          </span>
+                        ) : a.user_id ? (
                           <span className="text-[11px] text-muted-foreground">cuenta vinculada</span>
                         ) : (
                           <span className="text-[11px] text-muted-foreground">sin cuenta aún</span>
@@ -223,7 +227,7 @@ export default async function ArtesanosPage({
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-3">
-                        {!a.user_id ? (
+                        {!a.user_id && !a.es_demo ? (
                           <InvitarRapido artesanoId={a.id} />
                         ) : null}
                         <Link

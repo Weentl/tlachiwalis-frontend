@@ -6,7 +6,6 @@ import {
   ShoppingBag,
   Wallet,
   Receipt,
-  Landmark,
   Coins,
   ArrowUpRight,
   AlertTriangle,
@@ -21,6 +20,7 @@ import { Donut, HBars, StackedBar } from "@/components/admin/charts";
 import { SalesChart } from "@/components/admin/sales-chart";
 
 const ORDEN_COLOR: Record<Orden["estatus"], string> = {
+  pendiente: "#c9a24b",
   entregado: "#57211d",
   enviado: "#b45f39",
   pagado: "#8c7c68",
@@ -74,12 +74,11 @@ export default async function DashboardPage() {
       </header>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Ventas del mes" value={fmtPesos(m.gmvMes)} sub={delta} icon={<TrendingUp className="h-4 w-4" />} color="#57211d" />
         <StatCard label="Órdenes" value={m.ordenesMes.toLocaleString("es-MX")} icon={<ShoppingBag className="h-4 w-4" />} color="#b45f39" />
         <StatCard label="Ticket promedio" value={fmtPesos(m.aov)} icon={<Wallet className="h-4 w-4" />} color="#8c7c68" />
         <StatCard label={`Comisión ${Math.round(COMISION_RATE * 100)}%`} value={fmtPesos(m.comisionMes)} icon={<Receipt className="h-4 w-4" />} color="#b45f39" />
-        <StatCard label="Retención SAT" value={fmtPesos(m.retencionMes)} icon={<Landmark className="h-4 w-4" />} color="#8c7c68" />
         <StatCard label="Neto a artesanos" value={fmtPesos(m.netoMes)} icon={<Coins className="h-4 w-4" />} color="#a8761f" />
       </div>
 
@@ -201,9 +200,9 @@ export default async function DashboardPage() {
               <AlertTriangle className="h-4 w-4 text-destructive" /> Pendientes
             </h2>
             <ul className="space-y-2.5 text-sm">
-              <CatRow label="Piezas agotadas" value={m.alertas.agotadas} warn={m.alertas.agotadas > 0} />
-              <CatRow label="Artesanos sin RFC" value={m.alertas.sinRfc} warn={m.alertas.sinRfc > 0} hint="retención 36%" />
-              <CatRow label="Artesanos sin CLABE" value={m.alertas.sinClabe} warn={m.alertas.sinClabe > 0} hint="no se puede dispersar" />
+              <CatRow label="Piezas agotadas / vendidas" value={m.alertas.agotadas} warn={m.alertas.agotadas > 0} />
+              <CatRow label="Artesanos sin cobros" value={m.alertas.sinCobros} warn={m.alertas.sinCobros > 0} hint="no pueden vender" />
+              <CatRow label="Talleres demo" value={m.alertas.demo} hint="exhibición, no comprables" />
             </ul>
           </section>
         </div>

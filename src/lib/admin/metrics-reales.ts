@@ -94,6 +94,7 @@ export async function getMetricsReales(
   }
   for (const p of payouts) {
     if (!paidIds.has(p.order_id) || !p.artesano_id) continue;
+    if (p.status === "sin_cuenta" || p.status === "fallido") continue; // solo lo dispersable
     artMap.set(p.artesano_id, (artMap.get(p.artesano_id) ?? 0) + p.neto_centavos);
   }
   const porOficio: Serie[] = [...oficioMap.entries()].map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
@@ -126,7 +127,11 @@ export async function getMetricsReales(
       pieza: info.pieza,
       artesano: info.artesano,
       total: o.total_centavos,
-      estatus: (o.status === "fallida" ? "cancelado" : "pagado") as Orden["estatus"],
+      estatus: (o.status === "pagada"
+        ? "pagado"
+        : o.status === "fallida" || o.status === "cancelada"
+          ? "cancelado"
+          : "pendiente") as Orden["estatus"],
     };
   });
 
@@ -139,8 +144,9 @@ export async function getMetricsReales(
   };
   const alertas = {
     agotadas: catalogo.agotadas,
-    sinRfc: artesanos.filter((a) => !a.rfc).length,
-    sinClabe: artesanos.filter((a) => !a.clabe).length,
+    // Artesanos REALES (con acceso, no demo) que aún no pueden cobrar → no pueden vender.
+    sinCobros: artesanos.filter((a) => !a.es_demo && a.user_id && (!a.cobros_habilitados || !a.stripe_account_id)).length,
+    demo: artesanos.filter((a) => a.es_demo).length,
   };
 
   // Series reales para la gráfica (semana / mes / año)

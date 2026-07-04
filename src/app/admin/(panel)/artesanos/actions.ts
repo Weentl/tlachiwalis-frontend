@@ -160,7 +160,16 @@ export async function actualizarArtesano(
 export async function desactivarArtesano(formData: FormData): Promise<void> {
   const { supabase } = await requireAdmin();
   const id = String(formData.get("id") ?? "");
-  if (id) await supabase.from("artesanos").update({ status: "pausado" }).eq("id", id);
+  if (id) {
+    await supabase.from("artesanos").update({ status: "pausado" }).eq("id", id);
+    // Suspender = dejar de vender: despublica sus piezas (cuenta comprometida / baja ya no debe
+    // ser comprable). Pasan a borrador; se republican manualmente al reactivar.
+    await supabase
+      .from("productos")
+      .update({ status: "borrador" })
+      .eq("artesano_id", id)
+      .eq("status", "publicado");
+  }
   revalidatePath("/admin/artesanos");
   revalidatePath(`/admin/artesanos/${id}`);
   revalidatePath("/tienda");

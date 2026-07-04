@@ -30,6 +30,8 @@ export type ArtesanoAdmin = {
   stripe_account_id: string | null;
   cobros_habilitados: boolean;
   cobros_detalles_enviados: boolean;
+  // Taller de EXHIBICIÓN (demo): puede publicar pero sus piezas no son comprables.
+  es_demo: boolean;
   // Datos del REGISTRO autoguiado (0013): lo que el artesano llenó en nuestro onboarding.
   nombres: string | null;
   apellido_paterno: string | null;
