@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 // porque los destinos y las etiquetas difieren; el marcado/estilo es idéntico.
 const items = [
   { href: "/vendedor", label: "Inicio" },
+  { href: "/vendedor/pedidos", label: "Pedidos" },
   { href: "/vendedor/productos", label: "Mis piezas" },
   { href: "/vendedor/cobros", label: "Cobros" },
   { href: "/vendedor/perfil", label: "Mi perfil" },
