@@ -42,7 +42,11 @@ export function PiezaCard({
   // Un solo badge, prioridad Agotado > única > escasez. Pills; grana solo para
   // "única"; agotado neutro (nunca rojo).
   const badge = agotado
-    ? { txt: "Agotado", cls: "bg-cal/85 text-ceniza ring-1 ring-linea backdrop-blur" }
+    ? {
+        // Una pieza única agotada está VENDIDA (irrepetible); una de stock, "Agotado".
+        txt: tipo === "unico" ? "Vendida" : "Agotado",
+        cls: "bg-cal/85 text-ceniza ring-1 ring-linea backdrop-blur",
+      }
     : tipo === "unico"
       ? { txt: "Única", cls: "bg-grana text-[#FFF7EE] shadow-cta" }
       : tipo === "stock_simple" && disponibleTotal !== undefined && disponibleTotal <= 3

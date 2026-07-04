@@ -30,13 +30,23 @@ export function ComprarSimple({
   return (
     <div className="mt-6 space-y-4">
       {esUnico ? (
-        <div>
-          <p className="inline-flex items-center gap-2 rounded-full border border-cempa/40 bg-cempa/10 px-3.5 py-1.5 font-mono text-[0.7rem] uppercase tracking-[0.1em] text-tinta">
-            <span className="h-2 w-2 rounded-full bg-cempa" aria-hidden />
-            Pieza única · solo existe esta
-          </p>
-          <p className="mt-2 text-sm text-ceniza">Al comprarla, se retira de la tienda.</p>
-        </div>
+        agotado ? (
+          <div>
+            <p className="inline-flex items-center gap-2 rounded-full border border-linea bg-arena px-3.5 py-1.5 font-mono text-[0.7rem] uppercase tracking-[0.1em] text-ceniza">
+              <span className="h-2 w-2 rounded-full bg-ceniza" aria-hidden />
+              Vendida
+            </p>
+            <p className="mt-2 text-sm text-ceniza">Esta pieza única encontró su hogar.</p>
+          </div>
+        ) : (
+          <div>
+            <p className="inline-flex items-center gap-2 rounded-full border border-cempa/40 bg-cempa/10 px-3.5 py-1.5 font-mono text-[0.7rem] uppercase tracking-[0.1em] text-tinta">
+              <span className="h-2 w-2 rounded-full bg-cempa" aria-hidden />
+              Pieza única · solo existe esta
+            </p>
+            <p className="mt-2 text-sm text-ceniza">Al comprarla, se retira de la tienda.</p>
+          </div>
+        )
       ) : disponible !== null && !agotado ? (
         <>
           <SelectorCantidad value={qty} onChange={setQty} max={disponible} />

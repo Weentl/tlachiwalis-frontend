@@ -255,9 +255,12 @@ export function Catalog({
           <section className="mx-auto w-full max-w-7xl px-5 pt-8 md:px-6">
             <h2 className="font-display text-2xl text-tinta sm:text-3xl">Todo el catálogo</h2>
             <div className="mt-6 grid grid-cols-2 gap-x-5 gap-y-12 md:grid-cols-3 md:gap-x-6 lg:grid-cols-4">
-              {products.filter((p) => p.disponibleTotal > 0).map((p) => (
-                <PiezaCard key={p.id} id={p.id} nombre={p.nombre} maker={p.maker} region={p.region} precio={p.precio} precioDesde={p.precioDesde} esDesde={p.esDesde} img={p.img} disponibleTotal={p.disponibleTotal} tipo={p.tipo} />
-              ))}
+              {/* Todas las piezas; las vendidas/agotadas al final (se muestran como "Vendida"). */}
+              {[...products]
+                .sort((a, b) => Number(a.disponibleTotal <= 0) - Number(b.disponibleTotal <= 0))
+                .map((p) => (
+                  <PiezaCard key={p.id} id={p.id} nombre={p.nombre} maker={p.maker} region={p.region} precio={p.precio} precioDesde={p.precioDesde} esDesde={p.esDesde} img={p.img} disponibleTotal={p.disponibleTotal} tipo={p.tipo} />
+                ))}
             </div>
           </section>
         </div>

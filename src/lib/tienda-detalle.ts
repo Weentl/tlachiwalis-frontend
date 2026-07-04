@@ -51,7 +51,9 @@ export async function getPiezaExtra(id: string): Promise<PiezaExtra> {
       .from("productos")
       .select("nombre,categoria_id,atributos,precio_centavos,tipo_producto,artesano_id")
       .eq("id", id)
-      .eq("status", "publicado")
+      // publicado + agotado: las piezas VENDIDAS también muestran su ficha (galería, variantes,
+      // sello "Vendida"). Borradores siguen fuera. La RLS de anon ya expone ('publicado','agotado').
+      .in("status", ["publicado", "agotado"])
       .maybeSingle();
     if (!p) return VACIO;
 
